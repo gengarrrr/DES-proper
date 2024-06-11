@@ -26,16 +26,15 @@ Theorem compl_E:
   ∀m. E (¬m)=~ (E m)
 Proof
     RW_TAC fcp_ss[E_def, bitwise_perm_def,dimindex_64]
-  >> Suff ‘ (dimindex (:32) − EL (dimindex (:48) − 1 − i) E_data)<32’
-  >>rw[word_1comp_def]
-  >>rw[FCP_BETA]
+  >>Know ‘ (dimindex (:32) − EL (dimindex (:48) − 1 − i) E_data)<32’
   >- (fs [dimindex_48] \\
       POP_ASSUM MP_TAC \\       
-     Q.SPEC_TAC (‘i’, ‘n’) \\
-     rpt (CONV_TAC (BOUNDED_FORALL_CONV (SIMP_CONV list_ss [E_data]))) \\
+      Q.SPEC_TAC (‘i’, ‘n’) \\
+      rpt (CONV_TAC (BOUNDED_FORALL_CONV (SIMP_CONV list_ss [E_data]))) \\
       REWRITE_TAC [])
+  >>rw[word_1comp_def]
+  >>rw[FCP_BETA]
 QED
-
 
 Theorem compl_IP:
   ∀m. IP (¬m)=~ (IP m)
@@ -106,7 +105,6 @@ Definition roundk_supp:
     RK n (k:word64) = (RK_L n k,RK_R n k)
 End 
         
-
 Theorem compl_RK_L:
   !n (k:word64). 17 > n ==>(RK_L n ~k)=~(RK_L n k)
 Proof
@@ -122,7 +120,8 @@ Proof
      POP_ASSUM MP_TAC\\
      fs[dimindex_28]\\
      rw[word_1comp_def,FCP_BETA]\\
-     Suff `(64 − EL (27 − i) PC1_data)<64` >- rw[word_1comp_def,FCP_BETA] \\
+     Suff ‘(64 − EL (27 − i) PC1_data)<64’
+     >-rw[word_1comp_def,FCP_BETA] \\
      fs [dimindex_64] \\
      POP_ASSUM MP_TAC \\       
      Q.SPEC_TAC (‘i’, ‘n’) \\
@@ -133,7 +132,7 @@ Proof
   >> Q.ABBREV_TAC`b=EL n R_data `
   >> rw[word_rol_def]
   >> RW_TAC fcp_ss[word_ror_def]
-  >> Suff ` ((i + (28 − b MOD 28)) MOD dimindex (:28))<64`
+  >> Suff ‘((i + (28 − b MOD 28)) MOD dimindex (:28))<64’
   >- (rw[word_1comp_def]\\
       rw[FCP_BETA])
   >> fs [dimindex_64]
@@ -159,7 +158,8 @@ Proof
      POP_ASSUM MP_TAC\\
      fs[dimindex_28]\\
      rw[word_1comp_def,FCP_BETA]\\
-     Suff `(64 − EL (55 − i) PC1_data)<64` >- rw[word_1comp_def,FCP_BETA] \\
+     Suff ‘(64 − EL (55 − i) PC1_data)<64’
+     >- rw[word_1comp_def,FCP_BETA] \\
      fs [dimindex_64] \\
      POP_ASSUM MP_TAC \\       
      Q.SPEC_TAC (‘i’, ‘n’) \\
@@ -170,7 +170,7 @@ Proof
   >> Q.ABBREV_TAC`b=EL n R_data `
   >> rw[word_rol_def]
   >> RW_TAC fcp_ss[word_ror_def]
-  >> Suff ` ((i + (28 − b MOD 28)) MOD dimindex (:28))<64`
+  >> Suff ‘((i + (28 − b MOD 28)) MOD dimindex (:28))<64’
   >- (rw[word_1comp_def]\\
       rw[FCP_BETA])
   >> fs [dimindex_64]
@@ -180,9 +180,6 @@ Proof
   >> Q.EXISTS_TAC ‘28’
   >> rw[MOD_LESS]
 QED
-
-
-  
 
 Theorem convert_RK:
   !(k:word64) n. RoundKey n k=REVERSE (GENLIST (λi. RK i k) (SUC n))
@@ -208,15 +205,15 @@ Proof
   >> RW_TAC fcp_ss[bitwise_perm_def]
   >> Suff ` a @@ b = ~(~a @@ ~b)`
   >- (rw[]\\
-      Suff `(56 − EL (47 − i) PC2_data)<56`\\
-      rw[word_1comp_def]\\
-      rw[FCP_BETA]\\
-      (fs [dimindex_56] \\
+      Know `(56 − EL (47 − i) PC2_data)<56`
+      >- (fs [dimindex_56] \\
       POP_ASSUM MP_TAC \\
       POP_ASSUM MP_TAC \\   
       Q.SPEC_TAC (‘i’, ‘n’) \\
       rpt (CONV_TAC (BOUNDED_FORALL_CONV (SIMP_CONV list_ss [PC2_data]))) \\
-      REWRITE_TAC []))
+      REWRITE_TAC []) \\
+      rw[word_1comp_def]\\
+      rw[FCP_BETA])
    >> RW_TAC fcp_ss[]
    >> rw[word_concat_def,word_join_def]
    >> rw[w2w,word_1comp_def,word_or_def,FCP_BETA,word_lsl_def]
@@ -230,14 +227,13 @@ Proof
    >> rw[FCP_BETA]
 QED
 
-
-
 Theorem comple_property2:
   ∀k m n.0 < n /\ n< 17 ==> ~ ((FST(DES n k)) m)= (FST(DES n (~ k))) (~ m)
 Proof
      RW_TAC fcp_ss[DES_def,o_DEF, desCore_def, desRound_alt_Round']
   >> RW_TAC fcp_ss[]
-  >> Suff ‘  (Join (Swap (Round n keys (Split (IP m)))))= ~(Join (Swap (Round n keys' (Split (IP (¬m))))))’          
+     >> Suff ‘(Join (Swap (Round n keys (Split (IP m)))))=
+              ~(Join (Swap (Round n keys' (Split (IP (¬m))))))’          
   >- (Rewr' \\
       rw[compl_IIP])
   >> rw[Split_def]
@@ -247,20 +243,21 @@ Proof
   >>  Q.ABBREV_TAC ‘v=(31 >< 0) (IP m)’
   >>  Q.ABBREV_TAC ‘u'=(63 >< 32) (IP (¬m))’
   >>  Q.ABBREV_TAC ‘v'=(31 >< 0) (IP (¬m))’            
-  >> Suff ‘(M (u',v') keys' (SUC n),M (u',v') keys' n)= (~M (u,v) keys (SUC n),~M (u,v) keys n)’
+     >> Suff ‘(M (u',v') keys' (SUC n),M (u',v') keys' n)=
+              (~M (u,v) keys (SUC n),~M (u,v) keys n)’
   >- (Rewr' \\
       rw [compl_join] \\
-      rw[])
-                
+      rw[])               
   >>Suff ‘ (M (u',v') keys' n,M (u',v') keys' (SUC n)) =
-        (¬M (u,v) keys n,¬M (u,v) keys (SUC n))’
+          (¬M (u,v) keys n,¬M (u,v) keys (SUC n))’
   >- rw[]
-  >>Suff ‘∀x. x <= n ==>  (M (u',v') keys' x,M (u',v') keys' (SUC(x))) =
-        (¬M (u,v) keys x,¬M (u,v) keys (SUC(x)))’
+  >>Suff ‘∀x.x<=n ==>(M (u',v') keys' x,M (u',v') keys' (SUC(x)))           
+          = (¬M (u,v) keys x,¬M (u,v) keys (SUC(x)))’
   >- rw[]
   >> Induct_on ‘x’ 
   >- (simp [] \\
-    Know ‘(M (u',v') keys' 0,M (u',v') keys' (SUC 0))=Round 0 keys' (u',v')’
+      Know ‘(M (u',v') keys' 0,M (u',v') keys' (SUC 0))=
+            Round 0 keys' (u',v')’
   >- RW_TAC fcp_ss[Round_alt_half_message']
   >> Know ‘Round 0 keys' (u',v')= (u',v')’
   >- rw [Round_def]
@@ -292,16 +289,18 @@ Proof
   >- rw[]
   >> Rewr'
   >> rw[]
-  >> Know ‘ M (u',v') keys' (x+2)=  M (u',v') keys' x ?? (RoundOp (M (u',v') keys' (x+1)) (EL x keys'))’
+     >> Know ‘ M (u',v') keys' (x+2)=
+              M (u',v') keys' x ?? (RoundOp (M(u',v') keys' (x+1)) (EL x keys'))’
   >- rw[half_message']
   >> Rewr'
-  >> Know ‘ ~M (u,v) keys (x+2)=~ (M (u,v) keys x ?? (RoundOp (M (u,v) keys (x+1)) (EL x keys)))’
+     >> Know ‘ ~M (u,v) keys (x+2)=
+              ~(M (u,v) keys x ?? (RoundOp (M (u,v) keys (x+1)) (EL x keys)))’
   >- rw[half_message']
   >> Rewr'
   >> rw[]                
-  >> Suff ‘RoundOp (¬M (u,v) keys (x + 1)) (EL x keys')=RoundOp (M (u,v) keys (x + 1)) (EL x keys)’
+     >> Suff ‘RoundOp (¬M (u,v) keys (x + 1)) (EL x keys')=
+              RoundOp (M (u,v) keys (x + 1)) (EL x keys)’
   >- (rw[WORD_NOT_XOR])
-  
   >> rw[RoundOp_def]     
   >> Know ‘E (~M (u,v) keys (x + 1))=~E (M (u,v) keys (x + 1))’
   >- (rw[compl_E])
@@ -338,4 +337,5 @@ Proof
   >> simp [FORALL_PROD]
   >> rw[comple_PC2]
 QED
+
 
