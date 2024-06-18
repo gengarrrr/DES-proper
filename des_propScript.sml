@@ -339,3 +339,79 @@ Proof
 QED
 
 
+Definition Weak_key1:
+  w_key1 :word64=0x0101010101010101w
+End
+
+Definition Weak_key2:
+  w_key2 :word64=0xfefefefefefefefew
+End
+
+Definition Weak_key3:
+  w_key3 :word64=0xe0e0e0e0f1f1f1f1w
+End
+
+Definition Weak_key4:
+  w_key4 :word64=0x1f1f1f1f0e0e0e0ew
+End
+
+Theorem weakK_proper1:
+  !plaintext. ((FST(FullDES w_key1)) ((FST(FullDES w_key1)) plaintext) = plaintext)
+Proof
+     rw[DES_def]
+  >> Know ‘LENGTH (KS w_key1 16)=16’
+  >- rw [LENGTH_KS]                                
+  >> Suff ‘desCore 16 (KS w_key1 16) (desCore 16 (KS w_key1 16) plaintext)=
+     desCore 16 (REVERSE (KS w_key1 16)) (desCore 16 (KS w_key1 16) plaintext)’
+  >- rw [desCore_CORRECT]   
+  >> Suff ‘((REVERSE (KS w_key1 16))=KS w_key1 16)’
+  >- rw[]
+  >> rw[KS_def]
+  >> EVAL_TAC
+QED
+
+Theorem weakK_proper2:
+  !plaintext. ((FST(FullDES w_key2)) ((FST(FullDES w_key2)) plaintext) = plaintext)
+Proof
+     rw[DES_def]
+  >> Know ‘LENGTH (KS w_key2 16)=16’
+  >- rw [LENGTH_KS]                                
+  >> Suff ‘desCore 16 (KS w_key2 16) (desCore 16 (KS w_key2 16) plaintext)=
+     desCore 16 (REVERSE (KS w_key2 16)) (desCore 16 (KS w_key2 16) plaintext)’
+  >- rw [desCore_CORRECT]   
+  >> Suff ‘((REVERSE (KS w_key2 16))=KS w_key2 16)’
+  >- rw[]
+  >> rw[KS_def]
+  >> EVAL_TAC
+QED
+
+Theorem weakK_proper3:
+  !plaintext. ((FST(FullDES w_key3)) ((FST(FullDES w_key3)) plaintext) = plaintext)
+Proof
+     rw[DES_def]
+  >> Know ‘LENGTH (KS w_key3 16)=16’
+  >- rw [LENGTH_KS]                                
+  >> Suff ‘desCore 16 (KS w_key3 16) (desCore 16 (KS w_key3 16) plaintext)=
+     desCore 16 (REVERSE (KS w_key3 16)) (desCore 16 (KS w_key3 16) plaintext)’
+  >- rw [desCore_CORRECT]   
+  >> Suff ‘((REVERSE (KS w_key3 16))=KS w_key3 16)’
+  >- rw[]
+  >> rw[KS_def]
+  >> EVAL_TAC
+QED
+
+Theorem weakK_proper4:
+  !plaintext. ((FST(FullDES w_key4)) ((FST(FullDES w_key4)) plaintext) = plaintext)
+Proof
+     rw[DES_def]
+  >> Know ‘LENGTH (KS w_key4 16)=16’
+  >- rw [LENGTH_KS]                                
+  >> Suff ‘desCore 16 (KS w_key4 16) (desCore 16 (KS w_key4 16) plaintext)=
+     desCore 16 (REVERSE (KS w_key4 16)) (desCore 16 (KS w_key4 16) plaintext)’
+  >- rw [desCore_CORRECT]   
+  >> Suff ‘((REVERSE (KS w_key4 16))=KS w_key4 16)’
+  >- rw[]
+  >> rw[KS_def]
+  >> EVAL_TAC
+QED
+
