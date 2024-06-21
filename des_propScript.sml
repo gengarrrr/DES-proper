@@ -227,12 +227,12 @@ Proof
    >> rw[FCP_BETA]
 QED
 
-Theorem comple_property2:
+Theorem comple_property:
   ∀k m n.0 < n /\ n< 17 ==> ~ ((FST(DES n k)) m)= (FST(DES n (~ k))) (~ m)
 Proof
      RW_TAC fcp_ss[DES_def,o_DEF, desCore_def, desRound_alt_Round']
   >> RW_TAC fcp_ss[]
-     >> Suff ‘(Join (Swap (Round n keys (Split (IP m)))))=
+  >> Suff ‘(Join (Swap (Round n keys (Split (IP m)))))=
               ~(Join (Swap (Round n keys' (Split (IP (¬m))))))’          
   >- (Rewr' \\
       rw[compl_IIP])
@@ -243,7 +243,7 @@ Proof
   >>  Q.ABBREV_TAC ‘v=(31 >< 0) (IP m)’
   >>  Q.ABBREV_TAC ‘u'=(63 >< 32) (IP (¬m))’
   >>  Q.ABBREV_TAC ‘v'=(31 >< 0) (IP (¬m))’            
-     >> Suff ‘(M (u',v') keys' (SUC n),M (u',v') keys' n)=
+  >> Suff ‘(M (u',v') keys' (SUC n),M (u',v') keys' n)=
               (~M (u,v) keys (SUC n),~M (u,v) keys n)’
   >- (Rewr' \\
       rw [compl_join] \\
@@ -289,7 +289,7 @@ Proof
   >- rw[]
   >> Rewr'
   >> rw[]
-     >> Know ‘ M (u',v') keys' (x+2)=
+  >> Know ‘ M (u',v') keys' (x+2)=
               M (u',v') keys' x ?? (RoundOp (M(u',v') keys' (x+1)) (EL x keys'))’
   >- rw[half_message']
   >> Rewr'
@@ -298,7 +298,7 @@ Proof
   >- rw[half_message']
   >> Rewr'
   >> rw[]                
-     >> Suff ‘RoundOp (¬M (u,v) keys (x + 1)) (EL x keys')=
+  >> Suff ‘RoundOp (¬M (u,v) keys (x + 1)) (EL x keys')=
               RoundOp (M (u,v) keys (x + 1)) (EL x keys)’
   >- (rw[WORD_NOT_XOR])
   >> rw[RoundOp_def]     
