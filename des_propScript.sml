@@ -1,3 +1,7 @@
+(*===========================================================================*)
+(*  The Data Encryption Standard (DES) in HOL                                *)
+(*===========================================================================*)
+
 open HolKernel Parse boolLib bossLib;
 
 open arithmeticTheory numLib pairTheory fcpTheory fcpLib wordsTheory wordsLib
@@ -6,6 +10,8 @@ open arithmeticTheory numLib pairTheory fcpTheory fcpLib wordsTheory wordsLib
 open desTheory;
 
 val _ = guessing_word_lengths := true;
+val _ = new_theory "des_prop";
+
 val fcp_ss = std_ss ++ fcpLib.FCP_ss;
 
 Theorem compl_IIP:
@@ -67,7 +73,7 @@ Proof
 QED
 
 Theorem compl_extract_1:
-  !(m:word64). (63 >< 32) ~m = ~(63 >< 32) m
+  !(m:word64). ((63 >< 32) ~m):word32 = ~(63 >< 32) m
 Proof
      RW_TAC fcp_ss[word_extract_def]
   >> rw[word_bits_def]
@@ -78,7 +84,7 @@ Proof
 QED
 
 Theorem compl_extract_2:
-  !(m:word64). (31 >< 0) ~m = ~(31 >< 0) m
+  !(m:word64). ((31 >< 0) ~m):word32 = ~(31 >< 0) m
 Proof
      RW_TAC fcp_ss[word_extract_def]
   >> rw[word_bits_def]
@@ -295,7 +301,7 @@ Proof
               M (u',v') keys' x ?? (RoundOp (M(u',v') keys' (x+1)) (EL x keys'))’
   >- rw[half_message']
   >> Rewr'
-     >> Know ‘ ~M (u,v) keys (x+2)=
+  >> Know ‘ ~M (u,v) keys (x+2)=
               ~(M (u,v) keys x ?? (RoundOp (M (u,v) keys (x+1)) (EL x keys)))’
   >- rw[half_message']
   >> Rewr'
@@ -334,14 +340,15 @@ Proof
   >> simp [MAP_MAP_o]
   >> simp [o_DEF]
   >> Suff ‘(λx. PC2 ((λ(a,b). (¬a,¬b)) x)) =
-               (λx. ¬PC2 x)’   
+           (λx. ¬PC2 x)’
   >- rw []
   >> simp [FUN_EQ_THM]
   >> simp [FORALL_PROD]
   >> rw[comple_PC2]
 QED
 
-#week keys
+
+(* weak key *)   
 Definition Wkey_def:
   Wkey= [0x0101010101010101w:word64;0xfefefefefefefefew:word64;0xe0e0e0e0f1f1f1f1w:word64;0x1f1f1f1f0e0e0e0ew:word64]
 End
@@ -364,132 +371,58 @@ Proof
   >- EVAL_TAC
   >> EVAL_TAC
 QED
-
-#semi-week keys
-Definition semiWeak_key1:
-  semi_key1 =(0x01fe01fe01fe01few:word64,0xfe01fe01fe01fe01w:word64)
-End        
-
-Definition semiWeak_key2:
-  semi_key2 =(0x1fe01fe00ef10ef1w:word64,0xe01fe01ff10ef10ew:word64)
-End
-
-Definition semiWeak_key3:
-  semi_key3 =(0x01e001e001f101f1w:word64,0xe001e001f101f101w:word64)
-End        
-
-Definition semiWeak_key4:
-  semi_key4 =(0x1ffe1ffe0efe0efew:word64,0xfe1ffe1ffe0efe0ew:word64)
-End
-
-Definition semiWeak_key5:
-  semi_key5 =(0x011f011f010e010ew:word64,0x1f011f010e010e01w:word64)
-End
-
-Definition semiWeak_key6:
-  semi_key6 =(0xe0fee0fef1fef1few:word64,0xfee0fee0fef1fef1w:word64)
+      
+(* semi-weak key *)
+Definition Semiwkey_def:
+  Semiwkey =[
+  (0x01fe01fe01fe01few:word64,0xfe01fe01fe01fe01w:word64);
+  (0x1fe01fe00ef10ef1w:word64,0xe01fe01ff10ef10ew:word64);
+  (0x01e001e001f101f1w:word64,0xe001e001f101f101w:word64);
+  (0x1ffe1ffe0efe0efew:word64,0xfe1ffe1ffe0efe0ew:word64);
+  (0x011f011f010e010ew:word64,0x1f011f010e010e01w:word64);
+  (0xe0fee0fef1fef1few:word64,0xfee0fee0fef1fef1w:word64)
+  ]
 End
 
 Theorem semiK_proper1:
-  !plaintext. ((FST(FullDES (FST(semi_key1)))) ((FST(FullDES (SND(semi_key1)))) plaintext) = plaintext)  ∧
-  ((FST(FullDES (SND(semi_key1)))) ((FST(FullDES (FST(semi_key1)))) plaintext) = plaintext)
+  !plaintext pair. MEM pair Semiwkey ==>
+  ((FST(FullDES (FST(pair)))) ((FST(FullDES (SND(pair)))) plaintext) = plaintext)
 Proof
      rw[DES_def]
-  >- (Know ‘LENGTH ((KS (SND semi_key1) 16))=16’
-      >- rw [LENGTH_KS] \\ 
-      Suff ‘KS (FST semi_key1) 16 =REVERSE (KS (SND semi_key1) 16)’
-      >- rw [desCore_CORRECT] \\
-      EVAL_TAC)
-  >> Know ‘LENGTH ((KS (FST semi_key1) 16))=16’
+  >> Know ‘LENGTH ((KS (SND pair) 16))=16’
   >- rw [LENGTH_KS] 
-  >> Suff ‘KS (SND semi_key1) 16 =REVERSE (KS (FST semi_key1) 16)’
-  >- rw [desCore_CORRECT]
+  >> Suff ‘KS (FST pair) 16 =REVERSE (KS (SND pair) 16)’
+  >- rw [desCore_CORRECT] 
+  >> POP_ASSUM MP_TAC 
+  >> rw[Semiwkey_def] 
+  >- EVAL_TAC
+  >- EVAL_TAC
+  >- EVAL_TAC
+  >- EVAL_TAC
+  >- EVAL_TAC
   >> EVAL_TAC
 QED
 
 Theorem semiK_proper2:
-  !plaintext. ((FST(FullDES (FST(semi_key2)))) ((FST(FullDES (SND(semi_key2)))) plaintext) = plaintext)  ∧
-  ((FST(FullDES (SND(semi_key2)))) ((FST(FullDES (FST(semi_key2)))) plaintext) = plaintext)
+  !plaintext pair. MEM pair Semiwkey ==>
+  ((FST(FullDES (SND(pair)))) ((FST(FullDES (FST(pair)))) plaintext) = plaintext)
 Proof
      rw[DES_def]
-  >- (Know ‘LENGTH ((KS (SND semi_key2) 16))=16’
-      >- rw [LENGTH_KS] \\ 
-      Suff ‘KS (FST semi_key2) 16 =REVERSE (KS (SND semi_key2) 16)’
-      >- rw [desCore_CORRECT] \\
-      EVAL_TAC)
-  >> Know ‘LENGTH ((KS (FST semi_key2) 16))=16’
+  >> Know ‘LENGTH ((KS (FST pair) 16))=16’
   >- rw [LENGTH_KS] 
-  >> Suff ‘KS (SND semi_key2) 16 =REVERSE (KS (FST semi_key2) 16)’
+  >> Suff ‘KS (SND pair) 16 =REVERSE (KS (FST pair) 16)’
   >- rw [desCore_CORRECT]
+  >> POP_ASSUM MP_TAC 
+  >> rw[Semiwkey_def] 
+  >- EVAL_TAC
+  >- EVAL_TAC
+  >- EVAL_TAC
+  >- EVAL_TAC
+  >- EVAL_TAC
   >> EVAL_TAC
 QED
 
-Theorem semiK_proper3:
-  !plaintext. ((FST(FullDES (FST(semi_key3)))) ((FST(FullDES (SND(semi_key3)))) plaintext) = plaintext)  ∧
-  ((FST(FullDES (SND(semi_key3)))) ((FST(FullDES (FST(semi_key3)))) plaintext) = plaintext)
-Proof
-     rw[DES_def]
-  >- (Know ‘LENGTH ((KS (SND semi_key3) 16))=16’
-      >- rw [LENGTH_KS] \\ 
-      Suff ‘KS (FST semi_key3) 16 =REVERSE (KS (SND semi_key3) 16)’
-      >- rw [desCore_CORRECT] \\
-      EVAL_TAC)
-  >> Know ‘LENGTH ((KS (FST semi_key3) 16))=16’
-  >- rw [LENGTH_KS] 
-  >> Suff ‘KS (SND semi_key3) 16 =REVERSE (KS (FST semi_key3) 16)’
-  >- rw [desCore_CORRECT]
-  >> EVAL_TAC
-QED
-
-Theorem semiK_proper4:
-  !plaintext. ((FST(FullDES (FST(semi_key4)))) ((FST(FullDES (SND(semi_key4)))) plaintext) = plaintext)  ∧
-  ((FST(FullDES (SND(semi_key4)))) ((FST(FullDES (FST(semi_key4)))) plaintext) = plaintext)
-Proof
-     rw[DES_def]
-  >- (Know ‘LENGTH ((KS (SND semi_key4) 16))=16’
-      >- rw [LENGTH_KS] \\ 
-      Suff ‘KS (FST semi_key4) 16 =REVERSE (KS (SND semi_key4) 16)’
-      >- rw [desCore_CORRECT] \\
-      EVAL_TAC)
-  >> Know ‘LENGTH ((KS (FST semi_key4) 16))=16’
-  >- rw [LENGTH_KS] 
-  >> Suff ‘KS (SND semi_key4) 16 =REVERSE (KS (FST semi_key4) 16)’
-  >- rw [desCore_CORRECT]
-  >> EVAL_TAC
-QED
-
-Theorem semiK_proper5:
-  !plaintext. ((FST(FullDES (FST(semi_key5)))) ((FST(FullDES (SND(semi_key5)))) plaintext) = plaintext)  ∧
-  ((FST(FullDES (SND(semi_key5)))) ((FST(FullDES (FST(semi_key5)))) plaintext) = plaintext)
-Proof
-     rw[DES_def]
-  >- (Know ‘LENGTH ((KS (SND semi_key5) 16))=16’
-      >- rw [LENGTH_KS] \\ 
-      Suff ‘KS (FST semi_key5) 16 =REVERSE (KS (SND semi_key5) 16)’
-      >- rw [desCore_CORRECT] \\
-      EVAL_TAC)
-  >> Know ‘LENGTH ((KS (FST semi_key5) 16))=16’
-  >- rw [LENGTH_KS] 
-  >> Suff ‘KS (SND semi_key5) 16 =REVERSE (KS (FST semi_key5) 16)’
-  >- rw [desCore_CORRECT]
-  >> EVAL_TAC
-QED
-
-Theorem semiK_proper6:
-  !plaintext. ((FST(FullDES (FST(semi_key6)))) ((FST(FullDES (SND(semi_key6)))) plaintext) = plaintext)  ∧
-  ((FST(FullDES (SND(semi_key6)))) ((FST(FullDES (FST(semi_key6)))) plaintext) = plaintext)
-Proof
-     rw[DES_def]
-  >- (Know ‘LENGTH ((KS (SND semi_key6) 16))=16’
-      >- rw [LENGTH_KS] \\ 
-      Suff ‘KS (FST semi_key6) 16 =REVERSE (KS (SND semi_key6) 16)’
-      >- rw [desCore_CORRECT] \\
-      EVAL_TAC)
-  >> Know ‘LENGTH ((KS (FST semi_key6) 16))=16’
-  >- rw [LENGTH_KS] 
-  >> Suff ‘KS (SND semi_key6) 16 =REVERSE (KS (FST semi_key6) 16)’
-  >- rw [desCore_CORRECT]
-  >> EVAL_TAC
-QED        
+val _ = export_theory();
+val _ = html_theory "des_prop";     
 
 
