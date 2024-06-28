@@ -5,6 +5,7 @@ open arithmeticTheory numLib pairTheory fcpTheory fcpLib wordsTheory wordsLib
 
 open desTheory;
 
+val _ = guessing_word_lengths := true;
 val fcp_ss = std_ss ++ fcpLib.FCP_ss;
 
 Theorem compl_IIP:
@@ -227,6 +228,7 @@ Proof
    >> rw[FCP_BETA]
 QED
 
+Overload M[local] = “half_message RoundOp”
 Theorem comple_property:
   ∀k m n.0 < n /\ n< 17 ==> ~ ((FST(DES n k)) m)= (FST(DES n (~ k))) (~ m)
 Proof
@@ -340,79 +342,26 @@ Proof
 QED
 
 #week keys
-Definition Weak_key1:
-  w_key1 :word64=0x0101010101010101w
+Definition Wkey_def:
+  Wkey= [0x0101010101010101w:word64;0xfefefefefefefefew:word64;0xe0e0e0e0f1f1f1f1w:word64;0x1f1f1f1f0e0e0e0ew:word64]
 End
 
-Definition Weak_key2:
-  w_key2 :word64=0xfefefefefefefefew
-End
-
-Definition Weak_key3:
-  w_key3 :word64=0xe0e0e0e0f1f1f1f1w
-End
-
-Definition Weak_key4:
-  w_key4 :word64=0x1f1f1f1f0e0e0e0ew
-End
-
-Theorem weakK_proper1:
-  !plaintext. ((FST(FullDES w_key1)) ((FST(FullDES w_key1)) plaintext) = plaintext)
+Theorem weakK_proper:
+  !k plaintext. MEM k Wkey ⇒ ((FST(FullDES k)) ((FST(FullDES k)) plaintext) = plaintext)
 Proof
      rw[DES_def]
-  >> Know ‘LENGTH (KS w_key1 16)=16’
+  >> Know ‘LENGTH (KS k 16)=16’
   >- rw [LENGTH_KS]                                
-  >> Suff ‘desCore 16 (KS w_key1 16) (desCore 16 (KS w_key1 16) plaintext)=
-     desCore 16 (REVERSE (KS w_key1 16)) (desCore 16 (KS w_key1 16) plaintext)’
+  >> Suff ‘desCore 16 (KS k 16) (desCore 16 (KS k 16) plaintext)=
+     desCore 16 (REVERSE (KS k 16)) (desCore 16 (KS k 16) plaintext)’
   >- rw [desCore_CORRECT]   
-  >> Suff ‘((REVERSE (KS w_key1 16))=KS w_key1 16)’
+  >> Suff ‘((REVERSE (KS k 16))=KS k 16)’
   >- rw[]
-  >> rw[KS_def]
-  >> EVAL_TAC
-QED
-
-Theorem weakK_proper2:
-  !plaintext. ((FST(FullDES w_key2)) ((FST(FullDES w_key2)) plaintext) = plaintext)
-Proof
-     rw[DES_def]
-  >> Know ‘LENGTH (KS w_key2 16)=16’
-  >- rw [LENGTH_KS]                                
-  >> Suff ‘desCore 16 (KS w_key2 16) (desCore 16 (KS w_key2 16) plaintext)=
-     desCore 16 (REVERSE (KS w_key2 16)) (desCore 16 (KS w_key2 16) plaintext)’
-  >- rw [desCore_CORRECT]   
-  >> Suff ‘((REVERSE (KS w_key2 16))=KS w_key2 16)’
-  >- rw[]
-  >> rw[KS_def]
-  >> EVAL_TAC
-QED
-
-Theorem weakK_proper3:
-  !plaintext. ((FST(FullDES w_key3)) ((FST(FullDES w_key3)) plaintext) = plaintext)
-Proof
-     rw[DES_def]
-  >> Know ‘LENGTH (KS w_key3 16)=16’
-  >- rw [LENGTH_KS]                                
-  >> Suff ‘desCore 16 (KS w_key3 16) (desCore 16 (KS w_key3 16) plaintext)=
-     desCore 16 (REVERSE (KS w_key3 16)) (desCore 16 (KS w_key3 16) plaintext)’
-  >- rw [desCore_CORRECT]   
-  >> Suff ‘((REVERSE (KS w_key3 16))=KS w_key3 16)’
-  >- rw[]
-  >> rw[KS_def]
-  >> EVAL_TAC
-QED
-
-Theorem weakK_proper4:
-  !plaintext. ((FST(FullDES w_key4)) ((FST(FullDES w_key4)) plaintext) = plaintext)
-Proof
-     rw[DES_def]
-  >> Know ‘LENGTH (KS w_key4 16)=16’
-  >- rw [LENGTH_KS]                                
-  >> Suff ‘desCore 16 (KS w_key4 16) (desCore 16 (KS w_key4 16) plaintext)=
-     desCore 16 (REVERSE (KS w_key4 16)) (desCore 16 (KS w_key4 16) plaintext)’
-  >- rw [desCore_CORRECT]   
-  >> Suff ‘((REVERSE (KS w_key4 16))=KS w_key4 16)’
-  >- rw[]
-  >> rw[KS_def]
+  >> POP_ASSUM MP_TAC
+  >> rw[Wkey_def]
+  >- EVAL_TAC
+  >- EVAL_TAC
+  >- EVAL_TAC
   >> EVAL_TAC
 QED
 
